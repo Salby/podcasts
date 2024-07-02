@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Podcasts</string>
+    <string name="navigate_back">Tilbage</string>
+    <string name="navigate_close">Luk</string>
+    <string name="navigate_more">Mere</string>
+    <string name="show_all">Vis alle</string>
+    <string name="subscriptions">Abonnementer</string>
+    <string name="subscribe_to_feed">Abonner</string>
+    <string name="unsubscribe_from_feed">Abonnerer</string>
+    <string name="search_clear">Fjern</string>
+    <string name="feed_search_hint">Søg efter titel eller udgiver</string>
+    <string name="search">Søg</string>
+    <string name="feed_explicit">Explicit</string>
+    <string name="sort">Sorter</string>
+    <string name="feed_website">Link</string>
+    <string name="continue_listening">Fortsæt med at lytte</string>
+    <string name="duration_left">%1$s tilbage</string>
+    <string name="subscriptions_bulk_unsubscribe">Fjern</string>
+
+    <plurals name="number_of_episodes">
+        <item quantity="one">%d episode</item>
+        <item quantity="other">%d episoder</item>
+    </plurals>
+    <plurals name="number_of_hours">
+        <item quantity="one">%d time</item>
+        <item quantity="other">%d timer</item>
+    </plurals>
+    <plurals name="number_of_hours_short">
+        <item quantity="one">%d t</item>
+        <item quantity="other">%d t.</item>
+    </plurals>
+    <plurals name="number_of_minutes">
+        <item quantity="one">%d minut</item>
+        <item quantity="other">%d minutter</item>
+    </plurals>
+    <plurals name="number_of_minutes_short">
+        <item quantity="one">%d min</item>
+        <item quantity="other">%d min.</item>
+    </plurals>
+    <string name="duration_glue"> og </string>
+
+    <plurals name="selected_subscriptions">
+        <item quantity="one">%d abonnement</item>
+        <item quantity="other">%d abonnementer</item>
+    </plurals>
+</resources>

@@ -1,0 +1,46 @@
+<resources>
+    <string name="app_name">Podcasts</string>
+    <string name="navigate_back">Back</string>
+    <string name="navigate_close">Close</string>
+    <string name="navigate_more">More</string>
+    <string name="show_all">Show all</string>
+    <string name="subscriptions">Subscriptions</string>
+    <string name="subscribe_to_feed">Subscribe</string>
+    <string name="unsubscribe_from_feed">Subscribed</string>
+    <string name="search_clear">Clear</string>
+    <string name="feed_search_hint">Search by title or author</string>
+    <string name="search">Search</string>
+    <string name="feed_explicit">Explicit</string>
+    <string name="sort">Sort</string>
+    <string name="feed_website">Link</string>
+    <string name="continue_listening">Continue listening</string>
+    <string name="duration_left">%1$s left</string>
+    <string name="subscriptions_bulk_unsubscribe">Unsubscribe</string>
+
+    <plurals name="number_of_episodes">
+        <item quantity="one">%d episode</item>
+        <item quantity="other">%d episodes</item>
+    </plurals>
+    <plurals name="number_of_hours">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
+    <plurals name="number_of_hours_short">
+        <item quantity="one">%d hr</item>
+        <item quantity="other">%d hr.</item>
+    </plurals>
+    <plurals name="number_of_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="number_of_minutes_short">
+        <item quantity="one">%d min</item>
+        <item quantity="other">%d min.</item>
+    </plurals>
+    <string name="duration_glue"> and </string>
+
+    <plurals name="selected_subscriptions">
+        <item quantity="one">%d subscription</item>
+        <item quantity="other">%d subscriptions</item>
+    </plurals>
+</resources>
