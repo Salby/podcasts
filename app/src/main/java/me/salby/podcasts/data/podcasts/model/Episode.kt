@@ -38,35 +38,6 @@ data class Episode(
 
     @ColumnInfo("podcast_index_org_id") val podcastIndexOrgId: Long = 0,
     @ColumnInfo("podcast_index_org_guid") val podcastIndexOrgGuid: String = ""
-
-    /*val id: Int,
-    val title: String,
-    val link: String,
-    val description: String,
-    val guid: String,
-
-    /**
-     * The time the [episode][Episode] was published, in epoch seconds.
-     */
-    val datePublished: Long,
-
-    val enclosureUrl: String,
-    val enclosureType: String,
-    val enclosureLength: Long,
-
-    /**
-     * Duration of the episode in seconds.
-     *
-     * Null if the [episode][Episode] is live.
-     */
-    val duration: Long?,
-
-    val explicit: Int,
-    val episode: Int?,
-    val season: Int?,
-    val image: String,
-    val feedId: Long,
-    val podcastGuid: String*/
 )
 
 class EpisodeDeserializer : JsonDeserializer<Episode> {
@@ -84,7 +55,7 @@ class EpisodeDeserializer : JsonDeserializer<Episode> {
             isExplicit = (json?.asJsonObject?.get("explicit")?.asInt ?: 0) == 1,
             duration = (json?.asJsonObject?.get("duration")?.asInt ?: 0).seconds,
             published = LocalDateTime.ofEpochSecond(
-                json?.asJsonObject?.get("publishedDate")?.asLong ?: 0, 0, ZoneOffset.UTC
+                (json?.asJsonObject?.get("datePublished")?.asInt ?: 0).toLong(), 0, ZoneOffset.UTC
             ),
             episode = if (episode?.isJsonNull == true) {
                 0

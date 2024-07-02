@@ -134,17 +134,7 @@ fun CompactHomeScreen(
 
                                         it is HomeUiState.HasFeeds -> SubscriptionsCarousel(
                                             it.feeds, onNavigateToFeed,
-                                            modifier = Modifier.fillMaxWidth(),
-                                            itemModifier = {
-                                                if (sharedTransitionScope != null && animatedVisibilityScope != null) {
-                                                    with(sharedTransitionScope) {
-                                                        Modifier.sharedElement(
-                                                            rememberSharedContentState("feed-${it.id}"),
-                                                            animatedVisibilityScope
-                                                        )
-                                                    }
-                                                } else Modifier
-                                            }
+                                            modifier = Modifier.fillMaxWidth()
                                         )
 
                                         else -> SubscriptionsCarouselEmptyMessage(

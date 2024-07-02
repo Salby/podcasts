@@ -146,7 +146,13 @@ class FeedViewModel @Inject constructor(
 
     private fun observeContinueListening() = viewModelScope.launch {
         repository.observeProgressForAllEpisodes()
-            .map { it.filter { progressWithEpisode -> progressWithEpisode.episode.feedId == viewModelState.value.feed?.id } }
+            .map {
+                it.filter { (progress, episode) ->
+                    episode.feedId == viewModelState.value.feed?.id &&
+                            progress.progress > 0 &&
+                            episode.duration.inWholeMilliseconds - progress.progress > 10000
+                }
+            }
             .distinctUntilChanged()
             .collect { results ->
                 if (results.isEmpty()) {
