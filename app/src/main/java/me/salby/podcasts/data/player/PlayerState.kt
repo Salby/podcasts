@@ -16,5 +16,14 @@ sealed interface PlayerState {
         val currentPosition: Long,
         val currentFeed: Feed,
         override val isLoading: Boolean
-    ) : PlayerState
+    ) : PlayerState {
+        val image: String = if (
+            currentEpisode.image.isNotBlank() &&
+            currentEpisode.image.isNotEmpty()
+        ) {
+            currentEpisode.image
+        } else {
+            currentFeed.image
+        }
+    }
 }

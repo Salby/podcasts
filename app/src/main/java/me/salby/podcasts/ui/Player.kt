@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.MutableWindowInsets
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -615,7 +614,7 @@ private fun ExpandedPlayer(
 
             with(sharedTransitionScope) {
                 GlideImage(
-                    model = playerState.currentEpisode.image,
+                    model = playerState.image,
                     contentDescription = null,
                     modifier = Modifier
                         .sharedElement(
@@ -771,7 +770,7 @@ private fun MinimizedPlayer(
         Box(modifier = Modifier.padding(8.dp)) {
             with(sharedTransitionScope) {
                 GlideImage(
-                    model = playerState.currentEpisode.image,
+                    model = playerState.image,
                     contentDescription = null,
                     modifier = Modifier
                         .sharedElement(
