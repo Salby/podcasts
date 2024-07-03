@@ -9,6 +9,7 @@ import me.salby.podcasts.data.podcasts.PodcastsRepository
 import me.salby.podcasts.data.podcasts.model.Feed
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -122,7 +123,7 @@ class HomeViewModel @Inject constructor(
             Log.d("Progress", "$latestEpisodeWithProgress")
             // We don't want to display the episode if it is the current episode in the player.
             val currentEpisode = playerService.mediaItem.first().let {
-                it?.mediaId?.let {  mediaId ->
+                it?.mediaId?.let { mediaId ->
                     val (_, episodeId) = PlayerService.getFeedAndEpisodeIdsFromMediaId(mediaId)
                     podcastsRepository.getEpisodeById(episodeId)
                 }
@@ -132,6 +133,17 @@ class HomeViewModel @Inject constructor(
             }
             viewModelState.update {
                 it.copy(latestEpisode = latestEpisodeWithProgress)
+            }
+            playerService.mediaItem.collect { mediaItem ->
+                if (mediaItem == null) {
+                    return@collect
+                }
+                val (_, episodeId) = PlayerService.getFeedAndEpisodeIdsFromMediaId(mediaItem.mediaId)
+                if (episodeId == latestEpisodeWithProgress.episode.id) {
+                    viewModelState.update {
+                        it.copy(latestEpisode = null)
+                    }
+                }
             }
         }
     }
