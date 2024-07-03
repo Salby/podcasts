@@ -82,6 +82,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.integration.compose.placeholder
 import me.salby.podcasts.LocalPlayer
 import me.salby.podcasts.R
+import me.salby.podcasts.data.player.PlayerState
 import me.salby.podcasts.data.podcasts.model.Episode
 import me.salby.podcasts.data.podcasts.model.Feed
 import me.salby.podcasts.data.podcasts.model.Progress
@@ -368,6 +369,15 @@ fun CompactFeedScreen(
                             }
                         }
 
+                        val isPlaying by remember(player.state, episode.id) {
+                            derivedStateOf {
+                                if (player.state is PlayerState.Active) {
+                                    return@derivedStateOf player.state.currentEpisode.id == episode.id
+                                }
+                                false
+                            }
+                        }
+
                         EpisodeListItem(
                             publishedDateContent = { Text(publishedAt) },
                             titleContent = { Text(episode.title) },
@@ -375,14 +385,27 @@ fun CompactFeedScreen(
                         ) {
                             AssistChip(
                                 onClick = { player.playEpisode(episode.id) },
-                                label = { Text(episode.duration.format(DurationFormatter.SHORT)) },
+                                label = {
+                                    if (isPlaying) {
+                                        require(player.state is PlayerState.Active)
+
+                                        Text(
+                                            stringResource(
+                                                R.string.duration_left,
+                                                player.state.timeLeft.format(DurationFormatter.SHORT)
+                                            )
+                                        )
+                                    } else {
+                                        Text(episode.duration.format(DurationFormatter.SHORT))
+                                    }
+                                },
                                 leadingIcon = {
                                     Icon(
                                         Icons.Outlined.PlayCircleOutline,
                                         contentDescription = null // TODO: Add localized description.
                                     )
                                 },
-                                enabled = episode.id > 0
+                                enabled = !isPlaying
                             )
 
                             Spacer(Modifier.width(8.dp))

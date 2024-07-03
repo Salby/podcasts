@@ -2,6 +2,8 @@ package me.salby.podcasts.data.player
 
 import me.salby.podcasts.data.podcasts.model.Episode
 import me.salby.podcasts.data.podcasts.model.Feed
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 sealed interface PlayerState {
     val isLoading: Boolean
@@ -25,5 +27,7 @@ sealed interface PlayerState {
         } else {
             currentFeed.image
         }
+
+        val timeLeft = (currentEpisode.duration - currentPosition.milliseconds)
     }
 }
