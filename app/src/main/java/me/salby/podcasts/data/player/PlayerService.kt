@@ -2,6 +2,7 @@ package me.salby.podcasts.data.player
 
 import android.content.ComponentName
 import android.content.Context
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -13,13 +14,17 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import me.salby.podcasts.PlaybackService
+import me.salby.podcasts.data.podcasts.PodcastsRepository
 import me.salby.podcasts.data.podcasts.model.Episode
 import java.util.Timer
 import javax.inject.Inject
@@ -29,12 +34,14 @@ import kotlin.coroutines.resume
 class PlayerService @OptIn(UnstableApi::class)
 @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val podcastsRepository: PodcastsRepository,
     private val externalScope: CoroutineScope,
 ) {
     private lateinit var mediaController: MediaController
 
     private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main
     private var timer: Timer? = null
+    private var nextEpisodeJob: Job? = null
     private val playerIsPlaying = MutableStateFlow(false)
     private val playerIsLoading = MutableStateFlow(false)
     private val playerPosition = MutableStateFlow<Long>(0)
@@ -136,8 +143,48 @@ class PlayerService @OptIn(UnstableApi::class)
                 override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                     playerMediaItem.update { mediaItem }
                 }
+
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (playbackState == Player.STATE_ENDED) {
+                        if (mediaController.hasNextMediaItem() || nextEpisodeJob != null) {
+                            return
+                        }
+                        nextEpisodeJob = externalScope.launch { playNextEpisode() }
+                    }
+                }
             }
         )
+    }
+
+    private suspend fun playNextEpisode() {
+        // Play the next episode of the podcast if available.
+        val (feedId, episodeId) = withContext(mainDispatcher) {
+            mediaController.currentMediaItem?.mediaId?.let {
+                getFeedAndEpisodeIdsFromMediaId(it)
+            }
+        } ?: return
+        val finishedEpisode = podcastsRepository.getEpisodeById(episodeId)
+        val episodes = podcastsRepository
+            .observeFeedByIdWithEpisodes(feedId)
+            .firstOrNull()
+            ?.episodes
+        if (finishedEpisode == null || episodes == null) {
+            return
+        }
+        val nextEpisode = episodes.firstOrNull { episode ->
+            episode.episode == finishedEpisode.episode + 1
+        } ?: return
+        withContext(mainDispatcher) {
+            mediaController.run {
+                if (hasNextMediaItem()) {
+                    return@withContext
+                }
+                addMediaItem(buildMediaItemFromEpisode(nextEpisode))
+                seekToNextMediaItem()
+                prepare()
+                play()
+            }
+        }
     }
 
     private fun recordPosition() {
