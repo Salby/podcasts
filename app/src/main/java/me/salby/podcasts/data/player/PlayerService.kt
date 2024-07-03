@@ -6,7 +6,6 @@ import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.MoreExecutors
@@ -14,17 +13,18 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import me.salby.podcasts.PlaybackService
 import me.salby.podcasts.data.podcasts.model.Episode
 import java.util.Timer
 import javax.inject.Inject
 import kotlin.concurrent.scheduleAtFixedRate
+import kotlin.coroutines.resume
 
 class PlayerService @OptIn(UnstableApi::class)
 @Inject constructor(
@@ -57,7 +57,6 @@ class PlayerService @OptIn(UnstableApi::class)
             playerMediaItem.update { mediaController.currentMediaItem }
             playerIsLoading.update { false }
         }, MoreExecutors.directExecutor())
-
     }
 
     suspend fun play() = withContext(mainDispatcher) {
@@ -97,9 +96,21 @@ class PlayerService @OptIn(UnstableApi::class)
         mediaItem: MediaItem,
         positionMs: Long,
         resetPosition: Boolean = true
-    ) = withContext(mainDispatcher) {
+    ) = externalScope.launch(mainDispatcher) {
         mediaController.setMediaItem(mediaItem, resetPosition)
-        mediaController.seekTo(positionMs)
+        mediaController.prepare()
+        suspendCancellableCoroutine { continuation ->
+            val listener = object : Player.Listener {
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (playbackState == Player.STATE_READY) {
+                        mediaController.seekTo(positionMs)
+                        mediaController.removeListener(this)
+                        continuation.resume(Unit)
+                    }
+                }
+            }
+            mediaController.addListener(listener)
+        }
     }
 
     suspend fun addMediaItem(index: Int, mediaItem: MediaItem) = withContext(mainDispatcher) {

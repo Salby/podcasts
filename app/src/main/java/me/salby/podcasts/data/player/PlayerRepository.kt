@@ -76,10 +76,7 @@ class PlayerRepository @Inject constructor(
     fun playEpisode(episodeId: Int, fromPosition: Long) = externalScope.launch {
         val episode = podcastsRepository.getEpisodeById(episodeId) ?: return@launch
         playerService.setMediaItem(PlayerService.buildMediaItemFromEpisode(episode), fromPosition)
-        with(playerService) {
-            prepare()
-            play()
-        }
+        playerService.play()
     }
 
     private suspend fun setEpisode(episodeId: Int, resetPosition: Boolean = true) {

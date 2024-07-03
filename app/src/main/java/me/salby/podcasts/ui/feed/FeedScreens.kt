@@ -5,6 +5,12 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -14,7 +20,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -32,7 +38,6 @@ import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.DownloadForOffline
 import androidx.compose.material.icons.outlined.Explicit
 import androidx.compose.material.icons.outlined.MoreHoriz
-import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.PlayCircleOutline
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material3.AssistChip
@@ -66,7 +71,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -85,12 +89,13 @@ import me.salby.podcasts.data.podcasts.model.ProgressWithEpisode
 import me.salby.podcasts.ui.DurationFormatter
 import me.salby.podcasts.ui.episode.EpisodeListItem
 import me.salby.podcasts.ui.format
+import me.salby.podcasts.ui.theme.EmphasizedAccelerate
+import me.salby.podcasts.ui.theme.EmphasizedDecelerate
 import me.salby.podcasts.ui.theme.PodcastsTheme
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(
@@ -135,7 +140,7 @@ fun CompactFeedScreen(
                     val imageModifier = if (
                         sharedTransitionScope != null &&
                         animatedVisibilityScope != null &&
-                        uiState is FeedUiState.HasFeed  &&
+                        uiState is FeedUiState.HasFeed &&
                         scrollBehavior.state.collapsedFraction < 1.0
                     ) {
                         with(sharedTransitionScope) {
@@ -194,60 +199,37 @@ fun CompactFeedScreen(
                     }
                 }
 
-                if (uiState is FeedUiState.HasFeed && uiState.lastListened != null) {
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
-                        shape = MaterialTheme.shapes.extraLarge,
-                        color = MaterialTheme.colorScheme.surfaceContainerHighest
-                    ) {
-                            EpisodeListItem(
-                                publishedDateContent = {
-                                    Text(
-                                        stringResource(R.string.continue_listening),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(bottom = 8.dp)
-                                    )
-                                },
-                                titleContent = { Text(uiState.lastListened.episode.title) },
-                                descriptionContent = {
-                                    Text(
-                                        uiState.lastListened.episode.description,
-                                        overflow = TextOverflow.Ellipsis,
-                                        maxLines = 3
-                                    )
-                                },
-                                actions = {
-                                    val timeLeft =
-                                        (uiState.lastListened.episode.duration.inWholeMilliseconds - uiState.lastListened.progress.progress)
-                                            .milliseconds
-                                    Button(
-                                        onClick = {
-                                            player.playEpisodeFromPosition(
-                                                uiState.lastListened.episode.id,
-                                                uiState.lastListened.progress.progress
-                                            )
-                                        },
-                                        modifier = Modifier.padding(top = 4.dp),
-                                        contentPadding = ButtonDefaults.ButtonWithIconContentPadding
-                                    ) {
-                                        Icon(
-                                            Icons.Outlined.PlayArrow,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(ButtonDefaults.IconSize)
-                                        )
-                                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                                        Text(
-                                            stringResource(
-                                                R.string.duration_left,
-                                                timeLeft.format(DurationFormatter.SHORT)
-                                            )
-                                        )
-                                    }
-                                }
-                            )
+                AnimatedContent(
+                    targetState = uiState,
+                    modifier = Modifier.clip(MaterialTheme.shapes.extraLarge),
+                    transitionSpec = {
+                        scaleIn(
+                            tween(400, 200, EmphasizedDecelerate),
+                            initialScale = .96f
+                        ) + fadeIn(
+                            tween(400, 200, EmphasizedDecelerate)
+                        ) togetherWith scaleOut(
+                            tween(200, easing = EmphasizedAccelerate),
+                            targetScale = .96f
+                        ) + fadeOut(
+                            tween(200, easing = EmphasizedAccelerate)
+                        )
+                    },
+                    label = "Last listened card visibility"
+                ) { currentUiState ->
+                    if (currentUiState is FeedUiState.HasFeed && currentUiState.lastListened != null) {
+                        ContinueListeningCard(
+                            model = currentUiState.lastListened,
+                            onPlayEpisode = {
+                                player.playEpisodeFromPosition(
+                                    currentUiState.lastListened.episode.id,
+                                    currentUiState.lastListened.progress.progress
+                                )
+                            },
+                            modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
+                        )
+                    } else {
+                        Spacer(Modifier.fillMaxWidth())
                     }
                 }
             }
@@ -258,7 +240,7 @@ fun CompactFeedScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(horizontal = 8.dp),
-            paneModifier = Modifier.fillMaxHeight()
+            paneModifier = Modifier.fillMaxSize()
         ) {
             if (uiState is FeedUiState.HasFeed) {
                 LazyColumn(contentPadding = PaddingValues(vertical = 16.dp)) {

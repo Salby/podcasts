@@ -7,12 +7,13 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import me.salby.podcasts.data.player.PlayerService
 import me.salby.podcasts.data.podcasts.PodcastsRepository
 import me.salby.podcasts.data.podcasts.model.Episode
 import me.salby.podcasts.data.podcasts.model.Feed
@@ -68,7 +69,8 @@ private data class FeedViewModelState(
 @HiltViewModel
 class FeedViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    private val repository: PodcastsRepository
+    private val repository: PodcastsRepository,
+    private val playerService: PlayerService
 ) : ViewModel() {
     private val viewModelState = MutableStateFlow(
         FeedViewModelState(
@@ -87,7 +89,7 @@ class FeedViewModel @Inject constructor(
 
     init {
         observeFeed()
-        observeContinueListening()
+        continueListening()
     }
 
     fun subscribeToFeed() {
@@ -144,8 +146,9 @@ class FeedViewModel @Inject constructor(
         }
     }
 
-    private fun observeContinueListening() = viewModelScope.launch {
-        repository.observeProgressForAllEpisodes()
+    private fun continueListening() = viewModelScope.launch {
+        val progress =  repository
+            .observeProgressForAllEpisodes()
             .map {
                 it.filter { (progress, episode) ->
                     episode.feedId == viewModelState.value.feed?.id &&
@@ -153,15 +156,26 @@ class FeedViewModel @Inject constructor(
                             episode.duration.inWholeMilliseconds - progress.progress > 10000
                 }
             }
-            .distinctUntilChanged()
-            .collect { results ->
-                if (results.isEmpty()) {
-                    return@collect
-                }
+            .first()
+        if (progress.isEmpty()) {
+            return@launch
+        }
+        val lastListened = progress.first()
+        viewModelState.update {
+            it.copy(lastListened = lastListened)
+        }
+        // Observe the player to remove the 'last listened' episode if the user resumes playing it.
+        playerService.mediaItem.collect { mediaItem ->
+            if (mediaItem == null) {
+                return@collect
+            }
+            val (_, episodeId) = PlayerService.getFeedAndEpisodeIdsFromMediaId(mediaItem.mediaId)
+            if (episodeId == lastListened.episode.id) {
                 viewModelState.update {
-                    it.copy(lastListened = results.first())
+                    it.copy(lastListened = null)
                 }
             }
+        }
     }
 
     private suspend fun setFeedIdByPodcastIndexOrgId(id: Long) {
