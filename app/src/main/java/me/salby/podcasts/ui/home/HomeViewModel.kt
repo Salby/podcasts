@@ -115,12 +115,10 @@ class HomeViewModel @Inject constructor(
             val allProgress = podcastsRepository
                 .observeProgressForAllEpisodes()
                 .first()
-            Log.d("Progress", "${allProgress.size}")
             val latestEpisodeWithProgress = allProgress
                 .firstOrNull { (progress, episode) ->
                     progress.progress > 0 && episode.duration.inWholeMilliseconds - progress.progress > 10000
                 } ?: return@launch
-            Log.d("Progress", "$latestEpisodeWithProgress")
             // We don't want to display the episode if it is the current episode in the player.
             val currentEpisode = playerService.mediaItem.first().let {
                 it?.mediaId?.let { mediaId ->

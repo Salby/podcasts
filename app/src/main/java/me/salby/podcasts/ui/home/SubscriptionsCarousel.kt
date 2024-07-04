@@ -59,7 +59,8 @@ fun SubscriptionsCarousel(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
 @Composable
 fun SubscriptionsCarouselPlaceholder(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    itemModifier: () -> Modifier = { Modifier }
 ) {
     val carouselState = rememberCarouselState { 10 }
 
@@ -75,7 +76,8 @@ fun SubscriptionsCarouselPlaceholder(
             contentDescription = null,
             modifier = Modifier
                 .size(SubscriptionsCarouselPreferredItemSize)
-                .maskClip(shape = MaterialTheme.shapes.extraLarge),
+                .maskClip(shape = MaterialTheme.shapes.extraLarge)
+                .then(itemModifier()),
             failure = placeholder(ColorPainter(MaterialTheme.colorScheme.surfaceContainerHigh))
         )
     }

@@ -8,6 +8,12 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -67,6 +73,9 @@ import me.salby.podcasts.ui.FeedsGrid
 import me.salby.podcasts.ui.Player
 import me.salby.podcasts.ui.episode.EpisodeListItem
 import me.salby.podcasts.ui.format
+import me.salby.podcasts.ui.placeholder
+import me.salby.podcasts.ui.theme.EmphasizedAccelerate
+import me.salby.podcasts.ui.theme.EmphasizedDecelerate
 import me.salby.podcasts.ui.theme.PodcastsTheme
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -106,7 +115,9 @@ fun CompactHomeScreen(
                                 .sharedBounds(
                                     rememberSharedContentState("subscriptions-surface"),
                                     animatedVisibilityScope,
-                                    resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds(alignment = Alignment.TopCenter),
+                                    resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds(
+                                        alignment = Alignment.TopCenter
+                                    ),
                                     placeHolderSize = SharedTransitionScope.PlaceHolderSize.animatedSize
                                 )
                         }
@@ -129,7 +140,10 @@ fun CompactHomeScreen(
                                 Crossfade(uiState, label = "Subscriptions") {
                                     when {
                                         it.isLoading -> SubscriptionsCarouselPlaceholder(
-                                            modifier = Modifier.fillMaxWidth()
+                                            modifier = Modifier.fillMaxWidth(),
+                                            itemModifier = {
+                                                Modifier.placeholder(true)
+                                            }
                                         )
 
                                         it is HomeUiState.HasFeeds -> SubscriptionsCarousel(
@@ -156,69 +170,44 @@ fun CompactHomeScreen(
                     }
                 }
 
-                if (uiState is HomeUiState.HasFeeds && uiState.latestEpisode != null) {
-                    item {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(HomeCardMargin),
-                            shape = MaterialTheme.shapes.large,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface
+                item {
+                    AnimatedContent(
+                        targetState = uiState,
+                        transitionSpec = {
+                            scaleIn(
+                                tween(400, 200, EmphasizedDecelerate),
+                                .96f
+                            ) + fadeIn(
+                                tween(400, 200, EmphasizedDecelerate)
+                            ) togetherWith scaleOut(
+                                tween(200, easing = EmphasizedAccelerate),
+                                targetScale = .96f
+                            ) + fadeOut(
+                                tween(200, easing = EmphasizedAccelerate)
                             )
-                        ) {
-                            Text(
-                                stringResource(R.string.continue_listening),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(16.dp, 16.dp, 16.dp)
-                            )
-                            EpisodeListItem(
-                                publishedDateContent = {
-                                    val formatter = DateTimeFormatter.ofPattern(
-                                        "dd MMM yyyy",
-                                        Locale.getDefault()
-                                    )
-                                    val formatted =
-                                        uiState.latestEpisode.episode.published.format(formatter)
-                                    Text(formatted)
-                                },
-                                titleContent = { Text(uiState.latestEpisode.episode.title) },
-                                descriptionContent = {
-                                    Text(
-                                        uiState.latestEpisode.episode.description,
-                                        overflow = TextOverflow.Ellipsis,
-                                        maxLines = 3
+                        },
+                        modifier = Modifier.clip(MaterialTheme.shapes.large),
+                        label = "Latest episode visibility"
+                    ) { currentUiState ->
+                        if (currentUiState is HomeUiState.HasFeeds && currentUiState.latestEpisode != null) {
+                            LatestEpisode(
+                                model = currentUiState.latestEpisode,
+                                onPlay = {
+                                    player.playEpisodeFromPosition(
+                                        currentUiState.latestEpisode.episode.id,
+                                        currentUiState.latestEpisode.progress.progress
                                     )
                                 },
-                                actions = {
-                                    val timeLeft =
-                                        (uiState.latestEpisode.episode.duration.inWholeMilliseconds - uiState.latestEpisode.progress.progress)
-                                            .milliseconds
-                                    Button(
-                                        onClick = {
-                                            player.playEpisodeFromPosition(
-                                                uiState.latestEpisode.episode.id,
-                                                uiState.latestEpisode.progress.progress
-                                            )
-                                        },
-                                        modifier = Modifier.padding(top = 4.dp),
-                                        contentPadding = ButtonDefaults.ButtonWithIconContentPadding
-                                    ) {
-                                        Icon(
-                                            Icons.Outlined.PlayArrow,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(ButtonDefaults.IconSize)
-                                        )
-                                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                                        Text(
-                                            stringResource(
-                                                R.string.duration_left,
-                                                timeLeft.format(DurationFormatter.SHORT)
-                                            )
-                                        )
-                                    }
-                                }
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(HomeCardMargin)
+                                    .placeholder(visible = currentUiState.isLoading)
+                            )
+                        } else {
+                            Spacer(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(HomeCardMargin)
                             )
                         }
                     }
@@ -344,6 +333,19 @@ class HomeUiStatePreviewParameterProvider : PreviewParameterProvider<HomeUiState
                     isExplicit = false,
                     episodeCount = 211,
                     subscribed = null
+                ),
+                Feed(
+                    id = 1,
+                    title = "70mmr",
+                    url = "https://anchor.fm/s/12d1fabc/podcast/rss",
+                    link = "https://www.70mmpod.com",
+                    description = "A podcast for movie fans, inspired by Letterboxd. (We're not experts.) Each week artist Danny Haas, spiritual advisor Protolexus, and journeyman podcaster Slim discuss a recently watched film together. A brand new theme each month. Their love for each other cannot be broken. Or can it? Merch available + new episodes every Monday.",
+                    author = "70mm",
+                    image = "https://d3t3ozftmdmh3i.cloudfront.net/production/podcast_uploaded_nologo/3057511/3057511-1648820616219-0adef97444f1.jpg",
+                    language = "en",
+                    isExplicit = false,
+                    episodeCount = 255,
+                    subscribed = null
                 )
             ), // TODO: Add feeds for preview.
             latestEpisode = ProgressWithEpisode(
@@ -371,7 +373,7 @@ class HomeUiStatePreviewParameterProvider : PreviewParameterProvider<HomeUiState
             query = "",
             searchResult = emptyList(),
             searchIsActive = false,
-            isLoading = true,
+            isLoading = false,
             messages = emptyList()
         ),
         HomeUiState.NoFeeds(
