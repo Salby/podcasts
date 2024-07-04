@@ -90,6 +90,7 @@ import me.salby.podcasts.data.podcasts.model.ProgressWithEpisode
 import me.salby.podcasts.ui.DurationFormatter
 import me.salby.podcasts.ui.episode.EpisodeListItem
 import me.salby.podcasts.ui.format
+import me.salby.podcasts.ui.placeholder
 import me.salby.podcasts.ui.theme.EmphasizedAccelerate
 import me.salby.podcasts.ui.theme.EmphasizedDecelerate
 import me.salby.podcasts.ui.theme.PodcastsTheme
@@ -127,6 +128,11 @@ fun CompactFeedScreen(
                         .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
                         .statusBarsPadding()
                         .clip(MaterialTheme.shapes.extraLarge)
+                        .placeholder(
+                            visible = uiState.isLoading,
+                            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            shape = MaterialTheme.shapes.extraLarge
+                        )
                 ) {
                     val imageSize = maxWidth
                     val imageHeight =
@@ -147,7 +153,8 @@ fun CompactFeedScreen(
                         with(sharedTransitionScope) {
                             Modifier.sharedBounds(
                                 rememberSharedContentState("feed-${uiState.feed.id}"),
-                                animatedVisibilityScope
+                                animatedVisibilityScope,
+                                clipInOverlayDuringTransition = OverlayClip(MaterialTheme.shapes.extraLarge)
                             )
                         }
                     } else Modifier
@@ -166,8 +173,7 @@ fun CompactFeedScreen(
                             },
                             contentDescription = null,
                             modifier = Modifier
-                                .size(imageSize)
-                                .clip(MaterialTheme.shapes.extraLarge),
+                                .size(imageSize),
                             alignment = Alignment.Center,
                             contentScale = ContentScale.Crop,
                             loading = placeholder(ColorPainter(MaterialTheme.colorScheme.surfaceContainerHighest)),
@@ -241,7 +247,13 @@ fun CompactFeedScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(horizontal = 8.dp),
-            paneModifier = Modifier.fillMaxSize()
+            paneModifier = Modifier
+                .fillMaxSize()
+                .placeholder(
+                    visible = uiState.isLoading,
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    shape = MaterialTheme.shapes.extraLarge
+                )
         ) {
             if (uiState is FeedUiState.HasFeed) {
                 LazyColumn(contentPadding = PaddingValues(vertical = 16.dp)) {

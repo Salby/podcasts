@@ -187,7 +187,8 @@ fun CompactHomeScreen(
                             )
                         },
                         modifier = Modifier.clip(MaterialTheme.shapes.large),
-                        label = "Latest episode visibility"
+                        label = "Latest episode visibility",
+                        contentKey = { it is HomeUiState.HasFeeds && it.latestEpisode != null }
                     ) { currentUiState ->
                         if (currentUiState is HomeUiState.HasFeeds && currentUiState.latestEpisode != null) {
                             LatestEpisode(
@@ -201,7 +202,11 @@ fun CompactHomeScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(HomeCardMargin)
-                                    .placeholder(visible = currentUiState.isLoading)
+                                    .placeholder(
+                                        visible = currentUiState.isLoading,
+                                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                        shape = MaterialTheme.shapes.large
+                                    )
                             )
                         } else {
                             Spacer(

@@ -144,7 +144,7 @@ fun Modifier.placeholder(
     )
 
     // Run the optional animation spec and update the progress if the placeholder is visible
-    val animationSpec = highlight?.animationSpec
+    val animationSpec = (highlight ?: PlaceholderHighlight.fade()).animationSpec
     if (animationSpec != null && (visible || placeholderAlpha >= 0.01f)) {
         val infiniteTransition = rememberInfiniteTransition(label = "Placeholder infinite highlight")
         highlightProgress = infiniteTransition.animateFloat(
