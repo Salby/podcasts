@@ -281,10 +281,10 @@ fun Player(modifier: Modifier = Modifier, isExpanded: Boolean = false) {
 //                    }
 //                )
                 newPlayerLayout(
-                    isExpanded = isExpanded,
+                    isExpanded, animationProgress,
                     modifier = Modifier
                         .windowInsetsPadding(WindowInsets.navigationBars)
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 8.dp),
                     minimizedContent = { state, animatedVisibilityScope, sharedTransitionScope ->
                         MinimizedPlayer(
                             state,
@@ -321,17 +321,27 @@ fun Player(modifier: Modifier = Modifier, isExpanded: Boolean = false) {
 @Composable
 private fun newPlayerLayout(
     isExpanded: Boolean,
+    animationProgress: Animatable<Float, AnimationVector1D>,
     modifier: Modifier = Modifier,
     minimizedContent: @Composable (PlayerState.Active, AnimatedVisibilityScope, SharedTransitionScope) -> Unit,
     expandedContent: @Composable (PlayerState.Active, AnimatedVisibilityScope, SharedTransitionScope) -> Unit
 ) {
     val player = LocalPlayer.current
 
+    val surfaceColor = androidx.compose.ui.graphics.lerp(
+        MaterialTheme.colorScheme.surfaceBright,
+        MaterialTheme.colorScheme.surfaceContainerHighest,
+        animationProgress.value
+    )
+
+    val elevation = androidx.compose.ui.unit.lerp(5.dp, 8.dp, animationProgress.value)
+
     if (player.state is PlayerState.Active) {
         Surface(
             modifier = modifier,
             shape = MaterialTheme.shapes.extraLarge,
-            color = MaterialTheme.colorScheme.surfaceContainerHighest
+            color = surfaceColor,
+            shadowElevation = elevation
         ) {
             SharedTransitionLayout {
                 AnimatedContent(
@@ -1024,7 +1034,9 @@ fun ExpandedPlayerPreview(
 ) {
     ProvidePlayerState(CompositionPlayerState(playerState)) {
         PodcastsTheme {
-            Player(isExpanded = true)
+            Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
+                Player(isExpanded = true)
+            }
         }
     }
 }
@@ -1037,7 +1049,9 @@ fun MinimizedPlayerPreview(
 ) {
     ProvidePlayerState(CompositionPlayerState(playerState)) {
         PodcastsTheme {
-            Player()
+            Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
+                Player(modifier = Modifier.padding(vertical = 16.dp))
+            }
         }
     }
 }
