@@ -13,7 +13,9 @@ import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -68,6 +70,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -92,6 +95,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.constrainWidth
@@ -122,6 +126,20 @@ import kotlin.math.roundToInt
 import kotlin.math.sign
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+
+@Composable
+fun playerInsetHeight(extra: Dp = 0.dp): Dp {
+    val player = LocalPlayer.current
+    val transition = updateTransition(
+        targetState = player.state is PlayerState.Active,
+        label = "Player is active"
+    )
+    val inset by transition.animateDp(label = "Player inset height") {
+        if (it) 78.dp + extra
+        else 0.dp
+    }
+    return inset
+}
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -334,7 +352,7 @@ private fun newPlayerLayout(
         animationProgress.value
     )
 
-    val elevation = androidx.compose.ui.unit.lerp(5.dp, 8.dp, animationProgress.value)
+    val elevation = androidx.compose.ui.unit.lerp(2.dp, 3.dp, animationProgress.value)
 
     if (player.state is PlayerState.Active) {
         Surface(

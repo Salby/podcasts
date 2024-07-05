@@ -91,6 +91,7 @@ import me.salby.podcasts.ui.DurationFormatter
 import me.salby.podcasts.ui.episode.EpisodeListItem
 import me.salby.podcasts.ui.format
 import me.salby.podcasts.ui.placeholder
+import me.salby.podcasts.ui.playerInsetHeight
 import me.salby.podcasts.ui.theme.EmphasizedAccelerate
 import me.salby.podcasts.ui.theme.EmphasizedDecelerate
 import me.salby.podcasts.ui.theme.PodcastsTheme
@@ -154,6 +155,7 @@ fun CompactFeedScreen(
                             Modifier.sharedBounds(
                                 rememberSharedContentState("feed-${uiState.feed.id}"),
                                 animatedVisibilityScope,
+                                placeHolderSize = SharedTransitionScope.PlaceHolderSize.animatedSize,
                                 clipInOverlayDuringTransition = OverlayClip(MaterialTheme.shapes.extraLarge)
                             )
                         }
@@ -451,7 +453,7 @@ private fun Pane(
     paneModifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    Box(modifier = modifier) {
+    Box(modifier = modifier.padding(bottom = playerInsetHeight(8.dp))) {
         Surface(
             modifier = paneModifier.clip(MaterialTheme.shapes.extraLarge),
             color = MaterialTheme.colorScheme.surface,

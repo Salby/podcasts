@@ -77,6 +77,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.integration.compose.placeholder
 import me.salby.podcasts.R
 import me.salby.podcasts.data.podcasts.model.Feed
+import me.salby.podcasts.ui.playerInsetHeight
 import me.salby.podcasts.ui.theme.EmphasizedAccelerate
 import me.salby.podcasts.ui.theme.EmphasizedDecelerate
 import me.salby.podcasts.ui.theme.PodcastsTheme
@@ -142,7 +143,11 @@ fun CompactSubscriptionsScreen(
                 contentKey = { it.isNotEmpty() }
             ) { feeds ->
                 if (feeds.isNotEmpty()) {
-                    BottomAppBar(modifier = Modifier.fillMaxWidth()) {
+                    BottomAppBar(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = playerInsetHeight(8.dp))
+                    ) {
                         IconButton(
                             onClick = { feeds.forEach { onUnsubscribe(it) } }
                         ) {
@@ -163,7 +168,11 @@ fun CompactSubscriptionsScreen(
                         )
                     }
                 } else {
-                    Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+                    Spacer(
+                        Modifier
+                            .windowInsetsPadding(WindowInsets.navigationBars)
+                            .padding(bottom = playerInsetHeight(8.dp))
+                    )
                 }
             }
         },
