@@ -212,6 +212,8 @@ fun Player(modifier: Modifier = Modifier, isExpanded: Boolean = false) {
         }
     }
 
+    val scrimAlpha = lerp(0f, .32f, animationProgress.value)
+
     Box(
         modifier = modifier,
         contentAlignment = Alignment.BottomCenter
@@ -220,7 +222,7 @@ fun Player(modifier: Modifier = Modifier, isExpanded: Boolean = false) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = MaterialTheme.colorScheme.scrim.copy(alpha = animationProgress.value / 6))
+                    .background(color = MaterialTheme.colorScheme.scrim.copy(alpha = scrimAlpha))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
@@ -232,29 +234,14 @@ fun Player(modifier: Modifier = Modifier, isExpanded: Boolean = false) {
         AnimatedContent(
             targetState = player.state is PlayerState.Active && !player.isHidden,
             transitionSpec = {
-                (fadeIn(
-                    animationSpec = tween(
-                        600,
-                        delayMillis = 150,
-                        easing = EmphasizedDecelerate
-                    )
-                ) +
-                        scaleIn(
-                            initialScale = 0.9f,
-                            animationSpec = tween(
-                                600,
-                                delayMillis = 150,
-                                easing = EmphasizedDecelerate
-                            )
-                        ))
-                    .togetherWith(
-                        fadeOut(
-                            animationSpec = tween(
-                                150,
-                                easing = EmphasizedAccelerate
-                            )
-                        )
-                    )
+                fadeIn(
+                    tween(600, 150, EmphasizedDecelerate)
+                ) + scaleIn(
+                    tween(600, 150, EmphasizedDecelerate),
+                    .9f
+                ) togetherWith fadeOut(
+                    tween(150, easing = EmphasizedAccelerate)
+                )
             },
             contentAlignment = Alignment.Center,
             label = "Player visibility"
