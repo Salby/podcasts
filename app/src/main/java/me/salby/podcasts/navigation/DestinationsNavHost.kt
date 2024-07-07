@@ -24,6 +24,8 @@ import me.salby.podcasts.R
 import me.salby.podcasts.data.podcasts.model.Feed
 import me.salby.podcasts.ui.collection.CollectionRoute
 import me.salby.podcasts.ui.collection.CollectionViewModel
+import me.salby.podcasts.ui.discover.DiscoverRoute
+import me.salby.podcasts.ui.discover.DiscoverViewModel
 import me.salby.podcasts.ui.home.HomeRoute
 import me.salby.podcasts.ui.home.HomeViewModel
 import me.salby.podcasts.ui.theme.TopLevelEnterTransition
@@ -92,7 +94,10 @@ fun DestinationsNavHost(
         }
 
         composable(TopLevelDestination.Discover.route) {
-            Text("Discover")
+            val discoverViewModel = hiltViewModel<DiscoverViewModel>()
+            DiscoverRoute(
+                discoverViewModel
+            )
         }
 
         composable(TopLevelDestination.Collection.route) {
