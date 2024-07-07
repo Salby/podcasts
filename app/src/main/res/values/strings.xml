@@ -3,6 +3,11 @@
     <string name="navigate_back">Back</string>
     <string name="navigate_close">Close</string>
     <string name="navigate_more">More</string>
+
+    <string name="home">Home</string>
+    <string name="discover">Discover</string>
+    <string name="collection">Collection</string>
+
     <string name="show_all">Show all</string>
     <string name="subscriptions">Subscriptions</string>
     <string name="subscribe_to_feed">Subscribe</string>

@@ -61,6 +61,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
@@ -100,6 +101,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.util.fastFirst
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.zIndex
@@ -155,8 +157,13 @@ fun Player(modifier: Modifier = Modifier, isExpanded: Boolean = false) {
     val firstBackEvent = remember { mutableStateOf<BackEventCompat?>(null) }
     val currentBackEvent = remember { mutableStateOf<BackEventCompat?>(null) }
 
+    val animationInProgress by remember(animationProgress.value) {
+        derivedStateOf {
+            animationProgress.value > 0 && animationProgress.value < 1
+        }
+    }
+
     LaunchedEffect(isExpanded) {
-        val animationInProgress = animationProgress.value > 0 && animationProgress.value < 1
         val animationSpec =
             if (animationInProgress) AnimationPredictiveBackExitFloatSpec
             else if (isExpanded) AnimationEnterFloatSpec
@@ -232,6 +239,13 @@ fun Player(modifier: Modifier = Modifier, isExpanded: Boolean = false) {
 
     val scrimAlpha = lerp(0f, .32f, animationProgress.value)
 
+    val bottomNavigationBarPadding = lerp(88.dp, 0.dp, animationProgress.value)
+
+    val animationSpec =
+        if (animationInProgress) AnimationPredictiveBackExitFloatSpec
+        else if (isExpanded) AnimationEnterFloatSpec
+        else AnimationExitFloatSpec
+
     Box(
         modifier = modifier,
         contentAlignment = Alignment.BottomCenter
@@ -253,12 +267,12 @@ fun Player(modifier: Modifier = Modifier, isExpanded: Boolean = false) {
             targetState = player.state is PlayerState.Active && !player.isHidden,
             transitionSpec = {
                 fadeIn(
-                    tween(600, 150, EmphasizedDecelerate)
+                    animationSpec
                 ) + scaleIn(
-                    tween(600, 150, EmphasizedDecelerate),
+                    animationSpec,
                     .9f
                 ) togetherWith fadeOut(
-                    tween(150, easing = EmphasizedAccelerate)
+                    animationSpec
                 )
             },
             contentAlignment = Alignment.Center,
@@ -299,10 +313,10 @@ fun Player(modifier: Modifier = Modifier, isExpanded: Boolean = false) {
 //                    }
 //                )
                 newPlayerLayout(
-                    isExpanded, animationProgress,
+                    isExpanded, animationProgress, currentBackEvent,
                     modifier = Modifier
-                        .windowInsetsPadding(WindowInsets.navigationBars)
-                        .padding(horizontal = 8.dp),
+                        .padding(start = 8.dp, end = 8.dp, bottom = bottomNavigationBarPadding)
+                        .windowInsetsPadding(WindowInsets.navigationBars),
                     minimizedContent = { state, animatedVisibilityScope, sharedTransitionScope ->
                         MinimizedPlayer(
                             state,
@@ -340,6 +354,7 @@ fun Player(modifier: Modifier = Modifier, isExpanded: Boolean = false) {
 private fun newPlayerLayout(
     isExpanded: Boolean,
     animationProgress: Animatable<Float, AnimationVector1D>,
+    currentBackEvent: MutableState<BackEventCompat?>,
     modifier: Modifier = Modifier,
     minimizedContent: @Composable (PlayerState.Active, AnimatedVisibilityScope, SharedTransitionScope) -> Unit,
     expandedContent: @Composable (PlayerState.Active, AnimatedVisibilityScope, SharedTransitionScope) -> Unit
@@ -352,18 +367,41 @@ private fun newPlayerLayout(
         animationProgress.value
     )
 
-    val elevation = androidx.compose.ui.unit.lerp(2.dp, 3.dp, animationProgress.value)
+    val elevation = lerp(2.dp, 3.dp, animationProgress.value)
+
+    val borderRadius = lerp(16.dp, 28.dp, animationProgress.value)
+
+    val animationSpec =
+        if (animationProgress.value > 0 && animationProgress.value < 1) AnimationPredictiveBackExitFloatSpec
+        else if (isExpanded) tween(
+            durationMillis = AnimationEnterDurationMillis,
+            easing = AnimationEnterEasing
+        )
+        else tween(
+            durationMillis = AnimationExitDurationMillis,
+            easing = AnimationExitEasing
+        )
 
     if (player.state is PlayerState.Active) {
         Surface(
             modifier = modifier,
-            shape = MaterialTheme.shapes.extraLarge,
+            shape = RoundedCornerShape(borderRadius),
             color = surfaceColor,
             shadowElevation = elevation
         ) {
             SharedTransitionLayout {
                 AnimatedContent(
                     targetState = isExpanded,
+                    transitionSpec = {
+                        fadeIn(
+                            animationSpec
+                        ) + scaleIn(
+                            animationSpec,
+                            .92f
+                        ) togetherWith fadeOut(
+                            animationSpec
+                        )
+                    },
                     label = ""
                 ) { showExpandedPlayer ->
                     if (showExpandedPlayer) {
@@ -793,7 +831,7 @@ private fun MinimizedPlayer(
                             animatedVisibilityScope
                         )
                         .size(62.dp)
-                        .clip(RoundedCornerShape(20.dp)),
+                        .clip(RoundedCornerShape(8.dp)),
                     loading = placeholder(ColorPainter(MaterialTheme.colorScheme.secondary)),
                     failure = placeholder(ColorPainter(MaterialTheme.colorScheme.error))
                 )
@@ -925,12 +963,12 @@ private val AnimationEnterEasing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
 private val AnimationExitEasing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
 private val AnimationEnterFloatSpec: FiniteAnimationSpec<Float> = tween(
     durationMillis = AnimationEnterDurationMillis,
-    delayMillis = AnimationDelayMillis,
+    //delayMillis = AnimationDelayMillis,
     easing = AnimationEnterEasing,
 )
 private val AnimationExitFloatSpec: FiniteAnimationSpec<Float> = tween(
     durationMillis = AnimationExitDurationMillis,
-    delayMillis = AnimationDelayMillis,
+    //delayMillis = AnimationDelayMillis,
     easing = AnimationExitEasing,
 )
 private val AnimationPredictiveBackExitFloatSpec: FiniteAnimationSpec<Float> = tween(
