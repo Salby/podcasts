@@ -22,8 +22,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import me.salby.podcasts.R
 import me.salby.podcasts.data.podcasts.model.Feed
+import me.salby.podcasts.ui.collection.CollectionRoute
+import me.salby.podcasts.ui.collection.CollectionViewModel
 import me.salby.podcasts.ui.home.HomeRoute
 import me.salby.podcasts.ui.home.HomeViewModel
+import me.salby.podcasts.ui.theme.TopLevelEnterTransition
+import me.salby.podcasts.ui.theme.TopLevelExitTransition
 
 sealed class TopLevelDestination(
     val route: String,
@@ -69,7 +73,11 @@ fun DestinationsNavHost(
     NavHost(
         navController,
         startDestination = TopLevelDestination.Home.route,
-        modifier = modifier.background(color = MaterialTheme.colorScheme.surfaceContainer)
+        modifier = modifier.background(color = MaterialTheme.colorScheme.surfaceContainer),
+        enterTransition = { TopLevelEnterTransition() },
+        exitTransition = { TopLevelExitTransition() },
+        popEnterTransition = { TopLevelEnterTransition() },
+        popExitTransition = { TopLevelExitTransition() }
     ) {
         composable(TopLevelDestination.Home.route) {
             val homeViewModel = hiltViewModel<HomeViewModel>()
@@ -88,7 +96,10 @@ fun DestinationsNavHost(
         }
 
         composable(TopLevelDestination.Collection.route) {
-            Text("Collection")
+            val collectionViewModel = hiltViewModel<CollectionViewModel>()
+            CollectionRoute(
+                collectionViewModel
+            )
         }
     }
 }
