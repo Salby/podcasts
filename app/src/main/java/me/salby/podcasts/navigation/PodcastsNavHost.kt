@@ -1,9 +1,7 @@
 package me.salby.podcasts.navigation
 
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
-import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -12,7 +10,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +23,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import me.salby.podcasts.R
+import me.salby.podcasts.ui.Navigation
 import me.salby.podcasts.ui.feed.FeedRoute
 import me.salby.podcasts.ui.feed.FeedViewModel
 import me.salby.podcasts.ui.home.HomeRoute
@@ -41,9 +39,32 @@ fun PodcastsNavHost(modifier: Modifier = Modifier) {
     SharedTransitionLayout(modifier) {
         NavHost(
             navController,
-            startDestination = "home",
-            modifier = Modifier.background(color = MaterialTheme.colorScheme.surfaceContainer)
+            startDestination = "/",
+            modifier = modifier.background(color = MaterialTheme.colorScheme.surfaceContainer)
         ) {
+            composable(
+                "/",
+                exitTransition = {
+                    fadeOut(tween(500, easing = FastOutSlowInEasing))
+                },
+                popEnterTransition = {
+                    fadeIn(tween(500, easing = FastOutSlowInEasing))
+                }
+            ) {
+                Navigation(
+                    onNavigateToFeed = {
+                        navController.navigate("feed/${it.id}")
+                    },
+                    onNavigateToSearchResultFeed = {
+                        navController.navigate("search/${it.podcastIndexOrgId}")
+                    },
+                    onNavigateToSubscriptions = {
+                        navController.navigate("subscriptions")
+                    },
+                    sharedTransitionScope = this@SharedTransitionLayout
+                )
+            }
+
             composable(
                 "home",
                 exitTransition = {
@@ -58,14 +79,14 @@ fun PodcastsNavHost(modifier: Modifier = Modifier) {
                     homeViewModel,
                     onNavigateToFeed = { navController.navigate("feed/${it.id}") },
                     onNavigateToSearchResultFeed = { navController.navigate("search/${it.podcastIndexOrgId}") },
-                    onNavigateToSubscriptions = { navController.navigate("home/subscriptions") },
+                    onNavigateToSubscriptions = { navController.navigate("subscriptions") },
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedVisibilityScope = this@composable
                 )
             }
 
             composable(
-                "home/subscriptions",
+                "subscriptions",
                 enterTransition = {
                     fadeIn(tween(500, easing = FastOutSlowInEasing))
                 },

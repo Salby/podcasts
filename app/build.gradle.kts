@@ -90,7 +90,7 @@ val retrofitVersion = rootProject.extra["retrofit_version"]
 
 dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.2")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.3")
     implementation("androidx.activity:activity-compose:1.9.0")
     implementation(platform("androidx.compose:compose-bom:2024.06.00"))
     implementation("androidx.compose.ui:ui:$composeVersion")
@@ -129,4 +129,6 @@ dependencies {
     implementation("androidx.compose.material3.adaptive:adaptive:1.0.0-beta04")
     implementation("androidx.compose.material3.adaptive:adaptive-layout:1.0.0-beta04")
     implementation("androidx.compose.material3.adaptive:adaptive-navigation:1.0.0-beta04")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
 }

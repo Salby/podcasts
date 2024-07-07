@@ -4,6 +4,11 @@
     <string name="navigate_back">Tilbage</string>
     <string name="navigate_close">Luk</string>
     <string name="navigate_more">Mere</string>
+
+    <string name="home">Hjem</string>
+    <string name="discover">Udforsk</string>
+    <string name="collection">Samling</string>
+
     <string name="show_all">Vis alle</string>
     <string name="subscriptions">Abonnementer</string>
     <string name="subscribe_to_feed">Abonner</string>
