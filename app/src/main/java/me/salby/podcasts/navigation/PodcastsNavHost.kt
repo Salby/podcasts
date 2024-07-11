@@ -23,7 +23,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import me.salby.podcasts.R
-import me.salby.podcasts.ui.Navigation
 import me.salby.podcasts.ui.feed.FeedRoute
 import me.salby.podcasts.ui.feed.FeedViewModel
 import me.salby.podcasts.ui.home.HomeRoute
@@ -42,31 +41,9 @@ fun PodcastsNavHost(modifier: Modifier = Modifier) {
             startDestination = "/",
             modifier = modifier.background(color = MaterialTheme.colorScheme.surfaceContainer)
         ) {
-            composable(
-                "/",
-                exitTransition = {
-                    fadeOut(tween(500, easing = FastOutSlowInEasing))
-                },
-                popEnterTransition = {
-                    fadeIn(tween(500, easing = FastOutSlowInEasing))
-                }
-            ) {
-                Navigation(
-                    onNavigateToFeed = {
-                        navController.navigate("feed/${it.id}")
-                    },
-                    onNavigateToSearchResultFeed = {
-                        navController.navigate("search/${it.podcastIndexOrgId}")
-                    },
-                    onNavigateToSubscriptions = {
-                        navController.navigate("subscriptions")
-                    },
-                    sharedTransitionScope = this@SharedTransitionLayout
-                )
-            }
 
             composable(
-                "home",
+                "/",
                 exitTransition = {
                     fadeOut(tween(500, easing = FastOutSlowInEasing))
                 },
@@ -77,16 +54,16 @@ fun PodcastsNavHost(modifier: Modifier = Modifier) {
                 val homeViewModel = hiltViewModel<HomeViewModel>()
                 HomeRoute(
                     homeViewModel,
-                    onNavigateToFeed = { navController.navigate("feed/${it.id}") },
-                    onNavigateToSearchResultFeed = { navController.navigate("search/${it.podcastIndexOrgId}") },
-                    onNavigateToSubscriptions = { navController.navigate("subscriptions") },
+                    onNavigateToFeed = { navController.navigate("/subscriptions/${it.id}") },
+                    onNavigateToSearchResultFeed = { navController.navigate("/search/feeds/${it.podcastIndexOrgId}") },
+                    onNavigateToSubscriptions = { navController.navigate("/subscriptions") },
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedVisibilityScope = this@composable
                 )
             }
 
             composable(
-                "subscriptions",
+                "/subscriptions",
                 enterTransition = {
                     fadeIn(tween(500, easing = FastOutSlowInEasing))
                 },
@@ -104,14 +81,14 @@ fun PodcastsNavHost(modifier: Modifier = Modifier) {
                 SubscriptionsRoute(
                     subscriptionsViewModel,
                     onNavigateBack = { navController.popBackStack() },
-                    onNavigateToFeed = { navController.navigate("home/subscriptions/feed/${it.id}") },
+                    onNavigateToFeed = { navController.navigate("/subscriptions/${it.id}") },
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedVisibilityScope = this@composable
                 )
             }
 
             composable(
-                "home/subscriptions/feed/{feedId}",
+                "/subscriptions/{feedId}",
                 arguments = listOf(
                     navArgument("feedId") { type = NavType.IntType }
                 ),
@@ -138,7 +115,7 @@ fun PodcastsNavHost(modifier: Modifier = Modifier) {
             }
 
             composable(
-                "search/{podcastIndexOrgId}",
+                "/search/feed/{podcastIndexOrgId}",
                 arguments = listOf(
                     navArgument("podcastIndexOrgId") { type = NavType.LongType }
                 )
@@ -165,33 +142,6 @@ fun PodcastsNavHost(modifier: Modifier = Modifier) {
                             )
                         }
                     }
-                )
-            }
-
-            composable(
-                "feed/{feedId}",
-                arguments = listOf(
-                    navArgument("feedId") { type = NavType.IntType }
-                ),
-                enterTransition = {
-                    fadeIn(tween(500, easing = FastOutSlowInEasing))
-                },
-                exitTransition = {
-                    fadeOut(tween(500, easing = FastOutSlowInEasing))
-                },
-                popEnterTransition = {
-                    fadeIn(tween(500, easing = FastOutSlowInEasing))
-                },
-                popExitTransition = {
-                    fadeOut(tween(500, easing = FastOutSlowInEasing))
-                }
-            ) {
-                val feedViewModel = hiltViewModel<FeedViewModel>()
-                FeedRoute(
-                    viewModel = feedViewModel,
-                    onNavigateBack = { navController.popBackStack() },
-                    sharedTransitionScope = this@SharedTransitionLayout,
-                    animatedVisibilityScope = this@composable
                 )
             }
         }

@@ -102,7 +102,7 @@ fun CompactSubscriptionsScreen(
             LargeTopAppBar(
                 title = { Text(stringResource(R.string.subscriptions)) },
                 navigationIcon = {
-                    FilledTonalIconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.AutoMirrored.Outlined.ArrowBack,
                             contentDescription = stringResource(R.string.navigate_back)
@@ -111,7 +111,7 @@ fun CompactSubscriptionsScreen(
                 },
                 colors = TopAppBarDefaults.largeTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                 ),
                 scrollBehavior = scrollBehavior
             )
@@ -143,42 +143,49 @@ fun CompactSubscriptionsScreen(
                 contentKey = { it.isNotEmpty() }
             ) { feeds ->
                 if (feeds.isNotEmpty()) {
-                    BottomAppBar(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = playerInsetHeight(8.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer)
                     ) {
-                        IconButton(
-                            onClick = { feeds.forEach { onUnsubscribe(it) } }
+                        BottomAppBar(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = playerInsetHeight(8.dp)),
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
                         ) {
-                            Icon(
-                                if (feeds.size > 1) Icons.Outlined.DeleteSweep else Icons.Outlined.Delete,
-                                contentDescription = stringResource(R.string.subscriptions_bulk_unsubscribe)
+                            IconButton(
+                                onClick = { feeds.forEach { onUnsubscribe(it) } }
+                            ) {
+                                Icon(
+                                    if (feeds.size > 1) Icons.Outlined.DeleteSweep else Icons.Outlined.Delete,
+                                    contentDescription = stringResource(R.string.subscriptions_bulk_unsubscribe)
+                                )
+                            }
+                            Spacer(Modifier.width(16.dp))
+                            Text(
+                                pluralStringResource(
+                                    R.plurals.selected_subscriptions,
+                                    feeds.size,
+                                    feeds.size
+                                ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.labelLarge
                             )
                         }
-                        Spacer(Modifier.width(16.dp))
-                        Text(
-                            pluralStringResource(
-                                R.plurals.selected_subscriptions,
-                                feeds.size,
-                                feeds.size
-                            ),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.labelLarge
-                        )
                     }
                 } else {
                     Spacer(
                         Modifier
-                            .windowInsetsPadding(WindowInsets.navigationBars)
-                            .padding(bottom = playerInsetHeight(8.dp))
+                            .fillMaxWidth()
+                            .windowInsetsBottomHeight(WindowInsets.navigationBars)
                     )
                 }
             }
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainer
     ) { innerPadding ->
-        val surfaceModifier = if (
+        val sharedTransitionModifier = if (
             sharedTransitionScope != null &&
             animatedVisibilityScope != null
         ) {
@@ -187,66 +194,53 @@ fun CompactSubscriptionsScreen(
                     .sharedBounds(
                         rememberSharedContentState("subscriptions-surface"),
                         animatedVisibilityScope,
-                        resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds(alignment = Alignment.TopCenter),
+                        resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds(alignment = Alignment.Center),
                         clipInOverlayDuringTransition = OverlayClip(MaterialTheme.shapes.extraLarge)
                     )
             }
         } else Modifier
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp)
-        ) {
-            Surface(
-                modifier = surfaceModifier
-                    .fillMaxHeight()
-                    .clip(MaterialTheme.shapes.extraLarge),
-                color = MaterialTheme.colorScheme.surface
-            ) {
-                Crossfade(
-                    targetState = uiState.isLoading,
-                    label = "Skeleton visibility"
-                ) { showSkeleton ->
-                    if (showSkeleton) {
-                        FeedsGridLayout(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            contentPadding = PaddingValues(vertical = 16.dp),
-                            userScrollEnabled = false
-                        ) {
-                            items(10) {
-                                BoxWithConstraints {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(maxWidth)
-                                            .background(
-                                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                                shape = MaterialTheme.shapes.extraLarge
-                                            )
+        Crossfade(
+            targetState = uiState.isLoading,
+            modifier = sharedTransitionModifier,
+            label = "Skeleton visibility"
+        ) { showSkeleton ->
+            if (showSkeleton) {
+                FeedsGridLayout(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    contentPadding = innerPadding,
+                    userScrollEnabled = false
+                ) {
+                    items(10) {
+                        BoxWithConstraints {
+                            Box(
+                                modifier = Modifier
+                                    .size(maxWidth)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                        shape = MaterialTheme.shapes.large
                                     )
-                                }
-                            }
+                            )
                         }
+                    }
+                }
+            } else {
+                Crossfade(
+                    targetState = uiState is SubscriptionsUiState.HasFeeds || uiState is SubscriptionsUiState.EditFeeds,
+                    label = "Feeds visibility"
+                ) { showFeeds ->
+                    if (showFeeds) {
+                        FeedsGrid(
+                            uiState,
+                            onNavigateToFeed,
+                            onSelectFeed,
+                            onDeselectFeed,
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            contentPadding = innerPadding,
+                            sharedTransitionScope, animatedVisibilityScope
+                        )
                     } else {
-                        Crossfade(
-                            targetState = uiState is SubscriptionsUiState.HasFeeds || uiState is SubscriptionsUiState.EditFeeds,
-                            label = "Feeds visibility"
-                        ) { showFeeds ->
-                            if (showFeeds) {
-                                FeedsGrid(
-                                    uiState,
-                                    onNavigateToFeed,
-                                    onSelectFeed,
-                                    onDeselectFeed,
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                    contentPadding = PaddingValues(vertical = 16.dp),
-                                    sharedTransitionScope, animatedVisibilityScope
-                                )
-                            } else {
-                                Box {}
-                            }
-                        }
+                        Box {}
                     }
                 }
             }
@@ -314,6 +308,14 @@ private fun FeedsGrid(
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     if (isSelected) onDeselectFeed(feed.id) else onSelectFeed(feed.id)
                 }
+            )
+        }
+
+        item {
+            Spacer(
+                Modifier
+                    .fillMaxWidth()
+                    .height(16.dp + playerInsetHeight())
             )
         }
     }
@@ -464,6 +466,84 @@ class SubscriptionsUiStatePreviewParameterProvider :
             feeds = listOf(
                 Feed(
                     id = 1,
+                    title = "Undskyld vi roder",
+                    url = "https://www.omnycontent.com/d/playlist/504fd940-e457-44cf-9019-abca00be97ea/aa9b1acb-fc7d-48f6-b067-abca00beaa16/6af053db-da47-47dc-aee5-abca00c013d7/podcast.rss",
+                    link = "https://www.r8dio.dk/",
+                    description = "I denne udsendelsesrække følger vi tilblivelsen af r8Dio - Danmarks nye snakke-sludre-taleradio. Det er en dokumentaristisk behind-the-scenes føljeton, der giver et indblik i det store arbejde med at skabe en landsdækkende radio.",
+                    author = "r8Dio",
+                    image = "https://placehold.co/200x200/png",
+                    language = "da",
+                    isExplicit = false,
+                    episodeCount = 211,
+                    subscribed = null
+                ),
+                Feed(
+                    id = 2,
+                    title = "Undskyld vi roder",
+                    url = "https://www.omnycontent.com/d/playlist/504fd940-e457-44cf-9019-abca00be97ea/aa9b1acb-fc7d-48f6-b067-abca00beaa16/6af053db-da47-47dc-aee5-abca00c013d7/podcast.rss",
+                    link = "https://www.r8dio.dk/",
+                    description = "I denne udsendelsesrække følger vi tilblivelsen af r8Dio - Danmarks nye snakke-sludre-taleradio. Det er en dokumentaristisk behind-the-scenes føljeton, der giver et indblik i det store arbejde med at skabe en landsdækkende radio.",
+                    author = "r8Dio",
+                    image = "https://placehold.co/200x200/png",
+                    language = "da",
+                    isExplicit = false,
+                    episodeCount = 211,
+                    subscribed = null
+                ),
+                Feed(
+                    id = 3,
+                    title = "Undskyld vi roder",
+                    url = "https://www.omnycontent.com/d/playlist/504fd940-e457-44cf-9019-abca00be97ea/aa9b1acb-fc7d-48f6-b067-abca00beaa16/6af053db-da47-47dc-aee5-abca00c013d7/podcast.rss",
+                    link = "https://www.r8dio.dk/",
+                    description = "I denne udsendelsesrække følger vi tilblivelsen af r8Dio - Danmarks nye snakke-sludre-taleradio. Det er en dokumentaristisk behind-the-scenes føljeton, der giver et indblik i det store arbejde med at skabe en landsdækkende radio.",
+                    author = "r8Dio",
+                    image = "https://placehold.co/200x200/png",
+                    language = "da",
+                    isExplicit = false,
+                    episodeCount = 211,
+                    subscribed = null
+                ),
+                Feed(
+                    id = 2,
+                    title = "Undskyld vi roder",
+                    url = "https://www.omnycontent.com/d/playlist/504fd940-e457-44cf-9019-abca00be97ea/aa9b1acb-fc7d-48f6-b067-abca00beaa16/6af053db-da47-47dc-aee5-abca00c013d7/podcast.rss",
+                    link = "https://www.r8dio.dk/",
+                    description = "I denne udsendelsesrække følger vi tilblivelsen af r8Dio - Danmarks nye snakke-sludre-taleradio. Det er en dokumentaristisk behind-the-scenes føljeton, der giver et indblik i det store arbejde med at skabe en landsdækkende radio.",
+                    author = "r8Dio",
+                    image = "https://placehold.co/200x200/png",
+                    language = "da",
+                    isExplicit = false,
+                    episodeCount = 211,
+                    subscribed = null
+                ),
+                Feed(
+                    id = 3,
+                    title = "Undskyld vi roder",
+                    url = "https://www.omnycontent.com/d/playlist/504fd940-e457-44cf-9019-abca00be97ea/aa9b1acb-fc7d-48f6-b067-abca00beaa16/6af053db-da47-47dc-aee5-abca00c013d7/podcast.rss",
+                    link = "https://www.r8dio.dk/",
+                    description = "I denne udsendelsesrække følger vi tilblivelsen af r8Dio - Danmarks nye snakke-sludre-taleradio. Det er en dokumentaristisk behind-the-scenes føljeton, der giver et indblik i det store arbejde med at skabe en landsdækkende radio.",
+                    author = "r8Dio",
+                    image = "https://placehold.co/200x200/png",
+                    language = "da",
+                    isExplicit = false,
+                    episodeCount = 211,
+                    subscribed = null
+                ),
+                Feed(
+                    id = 2,
+                    title = "Undskyld vi roder",
+                    url = "https://www.omnycontent.com/d/playlist/504fd940-e457-44cf-9019-abca00be97ea/aa9b1acb-fc7d-48f6-b067-abca00beaa16/6af053db-da47-47dc-aee5-abca00c013d7/podcast.rss",
+                    link = "https://www.r8dio.dk/",
+                    description = "I denne udsendelsesrække følger vi tilblivelsen af r8Dio - Danmarks nye snakke-sludre-taleradio. Det er en dokumentaristisk behind-the-scenes føljeton, der giver et indblik i det store arbejde med at skabe en landsdækkende radio.",
+                    author = "r8Dio",
+                    image = "https://placehold.co/200x200/png",
+                    language = "da",
+                    isExplicit = false,
+                    episodeCount = 211,
+                    subscribed = null
+                ),
+                Feed(
+                    id = 3,
                     title = "Undskyld vi roder",
                     url = "https://www.omnycontent.com/d/playlist/504fd940-e457-44cf-9019-abca00be97ea/aa9b1acb-fc7d-48f6-b067-abca00beaa16/6af053db-da47-47dc-aee5-abca00c013d7/podcast.rss",
                     link = "https://www.r8dio.dk/",

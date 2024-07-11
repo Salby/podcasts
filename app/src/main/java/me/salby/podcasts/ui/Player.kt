@@ -61,7 +61,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
@@ -71,7 +70,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -239,8 +237,6 @@ fun Player(modifier: Modifier = Modifier, isExpanded: Boolean = false) {
 
     val scrimAlpha = lerp(0f, .32f, animationProgress.value)
 
-    val bottomNavigationBarPadding = lerp(88.dp, 0.dp, animationProgress.value)
-
     val animationSpec =
         if (animationInProgress) AnimationPredictiveBackExitFloatSpec
         else if (isExpanded) AnimationEnterFloatSpec
@@ -313,9 +309,9 @@ fun Player(modifier: Modifier = Modifier, isExpanded: Boolean = false) {
 //                    }
 //                )
                 newPlayerLayout(
-                    isExpanded, animationProgress, currentBackEvent,
+                    isExpanded, animationProgress,
                     modifier = Modifier
-                        .padding(start = 8.dp, end = 8.dp, bottom = bottomNavigationBarPadding)
+                        .padding(horizontal = 8.dp)
                         .windowInsetsPadding(WindowInsets.navigationBars),
                     minimizedContent = { state, animatedVisibilityScope, sharedTransitionScope ->
                         MinimizedPlayer(
@@ -354,7 +350,6 @@ fun Player(modifier: Modifier = Modifier, isExpanded: Boolean = false) {
 private fun newPlayerLayout(
     isExpanded: Boolean,
     animationProgress: Animatable<Float, AnimationVector1D>,
-    currentBackEvent: MutableState<BackEventCompat?>,
     modifier: Modifier = Modifier,
     minimizedContent: @Composable (PlayerState.Active, AnimatedVisibilityScope, SharedTransitionScope) -> Unit,
     expandedContent: @Composable (PlayerState.Active, AnimatedVisibilityScope, SharedTransitionScope) -> Unit

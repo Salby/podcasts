@@ -116,7 +116,7 @@ fun CompactHomeScreen(
                                     rememberSharedContentState("subscriptions-surface"),
                                     animatedVisibilityScope,
                                     resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds(
-                                        alignment = Alignment.TopCenter
+                                        alignment = Alignment.Center
                                     ),
                                     placeHolderSize = SharedTransitionScope.PlaceHolderSize.animatedSize
                                 )
@@ -341,7 +341,7 @@ class HomeUiStatePreviewParameterProvider : PreviewParameterProvider<HomeUiState
                 ),
                 Feed(
                     id = 1,
-                    title = "70mmr",
+                    title = "70mm",
                     url = "https://anchor.fm/s/12d1fabc/podcast/rss",
                     link = "https://www.70mmpod.com",
                     description = "A podcast for movie fans, inspired by Letterboxd. (We're not experts.) Each week artist Danny Haas, spiritual advisor Protolexus, and journeyman podcaster Slim discuss a recently watched film together. A brand new theme each month. Their love for each other cannot be broken. Or can it? Merch available + new episodes every Monday.",
