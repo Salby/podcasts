@@ -258,7 +258,7 @@ fun CompactFeedScreen(
                 )
         ) {
             if (uiState is FeedUiState.HasFeed) {
-                LazyColumn(contentPadding = PaddingValues(vertical = 16.dp)) {
+                LazyColumn(contentPadding = PaddingValues(top = 16.dp, bottom = playerInsetHeight(16.dp))) {
                     item {
                         Row(Modifier.padding(horizontal = 16.dp)) {
                             Column(modifier = Modifier.weight(2f)) {
@@ -453,9 +453,10 @@ private fun Pane(
     paneModifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    Box(modifier = modifier.padding(bottom = playerInsetHeight(8.dp))) {
+    Box(modifier = modifier) {
         Surface(
-            modifier = paneModifier.clip(MaterialTheme.shapes.extraLarge),
+            modifier = paneModifier,
+            shape = MaterialTheme.shapes.extraLarge,
             color = MaterialTheme.colorScheme.surface,
             content = content
         )
